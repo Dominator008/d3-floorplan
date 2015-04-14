@@ -166,7 +166,7 @@ d3.floorplan.overlays = function() {
 	};
 	
 	overlays.registerSelectCallback = function(cb) {
-		if (arguments.length) select.Callbacks.push(cb);
+		if (arguments.length) selectCallbacks.push(cb);
 		return overlays;
 	};
 	
