@@ -31,15 +31,15 @@ d3.floorplan.overlays = function() {
 		.on("drag", __mousemove)
 		.on("dragend", __mouseup),
 	dragged = null;
-	
+
 	function overlays(g) {
 		g.each(function(data){
 			if (! data) return;
 			var g = d3.select(this);
-			
+
 			// setup rectangle for capturing events
 			var canvas = g.selectAll("rect.overlay-canvas").data([0]);
-			
+
 			canvas.enter().append("rect")
 			.attr("class", "overlay-canvas")
 			.style("opacity", 0)
@@ -54,18 +54,17 @@ d3.floorplan.overlays = function() {
 			})
 			.on("mouseup.drag", __mouseup)
 			.on("touchend.drag", __mouseup);
-			
+
 			canvas.attr("x", x.range()[0])
 			.attr("y", y.range()[0])
 			.attr("height", y.range()[1] - y.range()[0])
 			.attr("width", x.range()[1] - x.range()[0]);
-			
+
 			// draw polygons (currently only type supported)
 			var polygons = g.selectAll("path.polygon")
 				.data(data.polygons || [], function(d) {return d.id;});
-			
 			polygons.enter().append("path")
-			.attr("class", "polygon")
+			.attr("class", function(d) {return d.cssClass || "polygon";})
 			.attr("vector-effect", "non-scaling-stroke")
 			.attr("pointer-events", "all")
 			.on("mousedown", function(d) {
@@ -75,15 +74,21 @@ d3.floorplan.overlays = function() {
 			})
 			.call(dragBehavior)
 			.append("title");
-			
+
 			polygons.exit().transition().style("opacity", 1e-6).remove();
-			
+
+			if (data.polygons) {
+				data.polygons.forEach(function(polygon) {
+					console.log(document.getElementById(polygon.id));
+				});
+			}
+
 			polygons
 			.attr("d", function(d) {return line(d.points) + "Z";})
 			.style("cursor", editMode ? "move" : "pointer")
 				.select("title")
 				.text(function(d) { return d.name || d.id; });
-			
+
 			if (editMode) {
 				var pointData = [];
 				if (data.polygons) {
@@ -94,7 +99,7 @@ d3.floorplan.overlays = function() {
 						});
 					});
 				}
-				
+
 				// determine current view scale to make appropriately
 				// sized points to drag
 				var scale = 1;
@@ -106,13 +111,13 @@ d3.floorplan.overlays = function() {
 						break;
 					}
 				}
-				
+
 				var points = g.selectAll("circle.vertex")
 				.data(pointData, function(d) {return d.parent.id + "-" + d.index;});
-				
+
 				points.exit().transition()
 				.attr("r", 1e-6).remove();
-				
+
 				points.enter().append("circle")
 				.attr("class", "vertex")
 				.attr("pointer-events", "all")
@@ -120,7 +125,7 @@ d3.floorplan.overlays = function() {
 				.style("cursor", "move")
 				.attr("r", 1e-6)
 				.call(dragBehavior);
-				
+
 				points
 				.attr("cx", function(d) { return x(d.parent.points[d.index].x); })
 				.attr("cy", function(d) { return y(d.parent.points[d.index].y); })
@@ -137,7 +142,7 @@ d3.floorplan.overlays = function() {
 		x = scale;
 		return overlays;
 	};
-	
+
 	overlays.yScale = function(scale) {
 		if (! arguments.length) return y;
 		y = scale;
@@ -147,38 +152,38 @@ d3.floorplan.overlays = function() {
 	overlays.id = function() {
 		return id;
 	};
-	
+
 	overlays.title = function(n) {
 		if (! arguments.length) return name;
 		name = n;
 		return overlays;
 	};
-	
+
 	overlays.editMode = function(enable) {
 		if (! arguments.length) return editMode;
 		editMode = enable;
 		return overlays;
 	};
-	
+
 	overlays.registerCanvasCallback = function(cb) {
 		if (arguments.length) canvasCallbacks.push(cb);
 		return overlays;
 	};
-	
+
 	overlays.registerSelectCallback = function(cb) {
 		if (arguments.length) selectCallbacks.push(cb);
 		return overlays;
 	};
-	
+
 	overlays.registerMoveCallback = function(cb) {
 		if (arguments.length) moveCallbacks.push(cb);
 		return overlays;
 	};
-	
+
 	function __dragItem(d) {
 		if (editMode) dragged = d;
 	}
-	
+
 	function __mousemove() {
 		if (dragged) {
 			var dx = x.invert(d3.event.dx) - x.invert(0);
@@ -196,7 +201,7 @@ d3.floorplan.overlays = function() {
 			overlays(d3.select(this.parentNode));
 		}
 	}
-	
+
 	function __mouseup() {
 		if (dragged) {
 			moveCallbacks.forEach(function(cb) {
@@ -206,6 +211,6 @@ d3.floorplan.overlays = function() {
 			dragged = null;
 		}
 	}
-	
+
 	return overlays;
 };
