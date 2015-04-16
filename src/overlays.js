@@ -64,10 +64,11 @@ d3.floorplan.overlays = function() {
 			var polygons = g.selectAll("path.polygon")
 				.data(data.polygons || [], function(d) {return d.id;});
 			polygons.enter().append("path")
+			.attr("id", function(d) {return d.id || d.name;})
 			.attr("class", function(d) {return d.cssClass || "polygon";})
 			.attr("vector-effect", "non-scaling-stroke")
 			.attr("pointer-events", "all")
-			.on("mousedown", function(d) {
+			.on("click", function(d) {
 				selectCallbacks.forEach(function(cb) {
 					cb(d.id);
 				});
@@ -76,12 +77,6 @@ d3.floorplan.overlays = function() {
 			.append("title");
 
 			polygons.exit().transition().style("opacity", 1e-6).remove();
-
-			if (data.polygons) {
-				data.polygons.forEach(function(polygon) {
-					console.log(document.getElementById(polygon.id));
-				});
-			}
 
 			polygons
 			.attr("d", function(d) {return line(d.points) + "Z";})
